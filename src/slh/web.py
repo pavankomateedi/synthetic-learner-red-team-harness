@@ -111,13 +111,14 @@ def _is_failing(name: str, value: float) -> bool:
 
 _CSS = """
 :root{
-  /* Anthropic chrome */
-  --bg:#faf9f5;          /* Anthropic light cream */
-  --card:#ffffff;
-  --line:#e8e6dc;        /* Anthropic light gray */
-  --ink:#141413;         /* Anthropic dark */
-  --mut:#5c5b56;
-  --mut2:#b0aea5;        /* Anthropic mid gray */
+  /* Anthropic dark canvas */
+  --bg:#141413;          /* Anthropic dark */
+  --card:#1c1b18;        /* warm raised surface */
+  --card2:#232220;       /* table header / alt rows */
+  --line:#2d2c29;        /* dark divider */
+  --ink:#faf9f5;         /* Anthropic light cream as text */
+  --mut:#b0aea5;         /* Anthropic mid gray */
+  --mut2:#7a7872;
   --orange:#d97757;      /* Anthropic primary accent */
   --a-blue:#6a9bcc;
   --a-green:#788c5d;
@@ -128,15 +129,16 @@ _CSS = """
   --g-yellow:#FBBC04;
   --g-green:#34A853;
 
-  /* Semantic (Google) */
-  --good:var(--g-green);
-  --bad:var(--g-red);
-  --warn:var(--g-yellow);
-  --info:var(--g-blue);
+  /* Semantic — slightly brightened for dark-mode readability */
+  --good:#5dd07a;
+  --bad:#f5685c;
+  --warn:#ffcc40;
+  --info:#6aa6ff;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);min-height:100vh;
-  font:15px/1.6 "Lora",Georgia,"Times New Roman",serif}
+  font:15px/1.6 "Lora",Georgia,"Times New Roman",serif;
+  background-image:radial-gradient(circle at 90% -10%,rgba(217,119,87,0.10) 0%,transparent 55%)}
 .wrap{max-width:1080px;margin:0 auto;padding:42px 22px 90px}
 
 h1,h2,h3,.tagline,.stat .n,th,.pill{font-family:"Poppins","Helvetica Neue",Arial,sans-serif}
@@ -146,17 +148,18 @@ h3{font-size:13px;margin:18px 0 10px;color:var(--orange);font-weight:600;
   text-transform:uppercase;letter-spacing:.08em}
 .sub{color:var(--mut);margin:0 0 6px;font-size:15.5px}
 .cap{color:var(--mut);margin:0 0 16px;font-size:14px;max-width:780px;font-style:italic}
-.brandbar{height:4px;width:72px;background:var(--orange);border-radius:4px;margin:18px 0 28px}
+.brandbar{height:4px;width:72px;background:var(--orange);border-radius:4px;margin:18px 0 28px;
+  box-shadow:0 0 18px rgba(217,119,87,0.45)}
 
 .summary{background:var(--card);border:1px solid var(--line);border-radius:14px;
   padding:24px 26px;margin:18px 0 32px;
-  box-shadow:0 1px 0 rgba(20,20,19,0.02),0 4px 18px rgba(20,20,19,0.04)}
+  box-shadow:0 1px 0 rgba(0,0,0,0.2),0 8px 28px rgba(0,0,0,0.25)}
 .summary p{margin:0 0 12px;font-size:16px;line-height:1.65}
 .summary p:last-of-type{margin-bottom:0}
 .summary strong{color:var(--orange);font-weight:600}
 
 .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
-.stat{background:var(--bg);border:1px solid var(--line);border-radius:10px;
+.stat{background:#1f1e1b;border:1px solid var(--line);border-radius:10px;
   padding:12px 14px;border-left:4px solid var(--g-blue)}
 .stat:nth-child(2){border-left-color:var(--g-red)}
 .stat:nth-child(3){border-left-color:var(--g-yellow)}
@@ -168,16 +171,16 @@ h3{font-size:13px;margin:18px 0 10px;color:var(--orange);font-weight:600;
 @media(max-width:680px){.statgrid{grid-template-columns:repeat(2,1fr)}}
 
 .pill{padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.02em}
-.pill.good{background:rgba(52,168,83,.12);color:#1e7e34}
-.pill.bad{background:rgba(234,67,53,.12);color:#c53122}
-.pill.warn{background:rgba(251,188,4,.18);color:#a07700}
+.pill.good{background:rgba(52,168,83,.18);color:var(--good)}
+.pill.bad{background:rgba(234,67,53,.20);color:var(--bad)}
+.pill.warn{background:rgba(251,188,4,.20);color:var(--warn)}
 
 table{width:100%;border-collapse:collapse;background:var(--card);
   border:1px solid var(--line);border-radius:12px;overflow:hidden;
-  box-shadow:0 1px 0 rgba(20,20,19,0.02)}
+  box-shadow:0 1px 0 rgba(0,0,0,0.15)}
 th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line);font-size:14.5px}
 th{color:var(--mut);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;
-  background:#faf6ee}
+  background:var(--card2)}
 tr:last-child td{border-bottom:0}
 td.num{font-variant-numeric:tabular-nums;text-align:right;
   font-family:"Poppins","Helvetica Neue",Arial,sans-serif}
@@ -186,7 +189,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right;
 .delta-up{color:var(--good);font-weight:600}
 .delta-down{color:var(--bad);font-weight:600}
 .delta-flat{color:var(--mut2)}
-.cell-fail{color:var(--bad);font-weight:600;background:rgba(234,67,53,0.06)}
+.cell-fail{color:var(--bad);font-weight:600;background:rgba(234,67,53,0.10)}
 .cell-ok{color:var(--mut)}
 
 .section{margin-top:32px}
@@ -201,9 +204,9 @@ ul.fail li.bad{color:var(--bad);border-left:3px solid var(--bad)}
 
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
 @media(max-width:680px){.grid{grid-template-columns:1fr}}
-.foot{margin-top:46px;color:var(--mut);font-size:13.5px;
+.foot{margin-top:46px;color:var(--mut2);font-size:13.5px;
   border-top:1px solid var(--line);padding-top:16px;font-style:italic}
-a{color:var(--orange);text-decoration:none;border-bottom:1px solid rgba(217,119,87,0.35)}
+a{color:var(--orange);text-decoration:none;border-bottom:1px solid rgba(217,119,87,0.4)}
 a:hover{border-bottom-color:var(--orange)}
 
 .tagline{color:var(--mut);font-weight:600;font-size:11.5px;
