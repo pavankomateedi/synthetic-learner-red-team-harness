@@ -1,58 +1,57 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Nerdy Tutor Stress-Test</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap"><style>
 :root{
-  /* Anthropic dark canvas */
-  --bg:#141413;          /* Anthropic dark */
-  --card:#1c1b18;        /* warm raised surface */
-  --card2:#232220;       /* table header / alt rows */
-  --line:#2d2c29;        /* dark divider */
-  --ink:#faf9f5;         /* Anthropic light cream as text */
-  --mut:#b0aea5;         /* Anthropic mid gray */
-  --mut2:#7a7872;
-  --orange:#d97757;      /* Anthropic primary accent */
-  --a-blue:#6a9bcc;
-  --a-green:#788c5d;
+  /* Nerdy dark canvas */
+  --bg:#0F0928;          /* deep Nerdy purple-navy */
+  --card:#1a1238;        /* purple-lifted raised surface */
+  --card2:#231a4a;       /* table headers / alt rows */
+  --line:#2a2244;        /* purple-tinted divider */
+  --ink:#FFFFFF;
+  --mut:#9E97FF;         /* light purple text */
+  --mut2:#6C6E87;
 
-  /* Google four-color palette */
-  --g-blue:#4285F4;
-  --g-red:#EA4335;
-  --g-yellow:#FBBC04;
-  --g-green:#34A853;
+  /* Nerdy brand trio (from nerdy.com CSS) */
+  --blue:#5D70FF;        /* readable Nerdy blue */
+  --purple:#D684FF;      /* vibrant Nerdy purple */
+  --pink:#FB43DA;        /* hot Nerdy magenta */
+  --indigo:#6C64C9;      /* deeper purple-blue */
+  --accent:var(--pink);  /* brand bar / primary accent */
 
-  /* Semantic — slightly brightened for dark-mode readability */
-  --good:#5dd07a;
-  --bad:#f5685c;
-  --warn:#ffcc40;
-  --info:#6aa6ff;
+  /* Semantic mapping over the trio */
+  --good:var(--blue);
+  --bad:var(--pink);
+  --warn:var(--purple);
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);min-height:100vh;
   font:15px/1.6 "Lora",Georgia,"Times New Roman",serif;
-  background-image:radial-gradient(circle at 90% -10%,rgba(217,119,87,0.10) 0%,transparent 55%)}
+  background-image:radial-gradient(circle at 90% -10%,rgba(251,67,218,0.10) 0%,transparent 55%),
+    radial-gradient(circle at 0% 100%,rgba(93,112,255,0.10) 0%,transparent 50%)}
 .wrap{max-width:1080px;margin:0 auto;padding:42px 22px 90px}
 
 h1,h2,h3,.tagline,.stat .n,th,.pill{font-family:"Poppins","Helvetica Neue",Arial,sans-serif}
 h1{font-size:34px;margin:0 0 8px;letter-spacing:-0.02em;font-weight:600;line-height:1.15}
 h2{font-size:20px;margin:42px 0 6px;letter-spacing:-0.01em;font-weight:600}
-h3{font-size:13px;margin:18px 0 10px;color:var(--orange);font-weight:600;
+h3{font-size:13px;margin:18px 0 10px;color:var(--accent);font-weight:600;
   text-transform:uppercase;letter-spacing:.08em}
 .sub{color:var(--mut);margin:0 0 6px;font-size:15.5px}
-.cap{color:var(--mut);margin:0 0 16px;font-size:14px;max-width:780px;font-style:italic}
-.brandbar{height:4px;width:72px;background:var(--orange);border-radius:4px;margin:18px 0 28px;
-  box-shadow:0 0 18px rgba(217,119,87,0.45)}
+.cap{color:var(--mut2);margin:0 0 16px;font-size:14px;max-width:780px;font-style:italic}
+.brandbar{height:4px;width:96px;border-radius:4px;margin:18px 0 28px;
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--pink));
+  box-shadow:0 0 22px rgba(251,67,218,0.45)}
 
 .summary{background:var(--card);border:1px solid var(--line);border-radius:14px;
   padding:24px 26px;margin:18px 0 32px;
-  box-shadow:0 1px 0 rgba(0,0,0,0.2),0 8px 28px rgba(0,0,0,0.25)}
+  box-shadow:0 1px 0 rgba(0,0,0,0.2),0 8px 28px rgba(0,0,0,0.35)}
 .summary p{margin:0 0 12px;font-size:16px;line-height:1.65}
 .summary p:last-of-type{margin-bottom:0}
-.summary strong{color:var(--orange);font-weight:600}
+.summary strong{color:var(--accent);font-weight:600}
 
 .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
-.stat{background:#1f1e1b;border:1px solid var(--line);border-radius:10px;
-  padding:12px 14px;border-left:4px solid var(--g-blue)}
-.stat:nth-child(2){border-left-color:var(--g-red)}
-.stat:nth-child(3){border-left-color:var(--g-yellow)}
-.stat:nth-child(4){border-left-color:var(--g-green)}
+.stat{background:#150c33;border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;border-left:4px solid var(--blue)}
+.stat:nth-child(2){border-left-color:var(--purple)}
+.stat:nth-child(3){border-left-color:var(--pink)}
+.stat:nth-child(4){border-left-color:var(--indigo)}
 .stat .n{font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;
   line-height:1.1;letter-spacing:-0.01em}
 .stat .lbl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;
@@ -60,13 +59,13 @@ h3{font-size:13px;margin:18px 0 10px;color:var(--orange);font-weight:600;
 @media(max-width:680px){.statgrid{grid-template-columns:repeat(2,1fr)}}
 
 .pill{padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.02em}
-.pill.good{background:rgba(52,168,83,.18);color:var(--good)}
-.pill.bad{background:rgba(234,67,53,.20);color:var(--bad)}
-.pill.warn{background:rgba(251,188,4,.20);color:var(--warn)}
+.pill.good{background:rgba(93,112,255,.20);color:var(--blue)}
+.pill.bad{background:rgba(251,67,218,.18);color:var(--pink)}
+.pill.warn{background:rgba(214,132,255,.20);color:var(--purple)}
 
 table{width:100%;border-collapse:collapse;background:var(--card);
   border:1px solid var(--line);border-radius:12px;overflow:hidden;
-  box-shadow:0 1px 0 rgba(0,0,0,0.15)}
+  box-shadow:0 1px 0 rgba(0,0,0,0.2)}
 th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line);font-size:14.5px}
 th{color:var(--mut);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;
   background:var(--card2)}
@@ -78,29 +77,29 @@ td.num{font-variant-numeric:tabular-nums;text-align:right;
 .delta-up{color:var(--good);font-weight:600}
 .delta-down{color:var(--bad);font-weight:600}
 .delta-flat{color:var(--mut2)}
-.cell-fail{color:var(--bad);font-weight:600;background:rgba(234,67,53,0.10)}
-.cell-ok{color:var(--mut)}
+.cell-fail{color:var(--pink);font-weight:600;background:rgba(251,67,218,0.10)}
+.cell-ok{color:var(--mut2)}
 
 .section{margin-top:32px}
 ul.fail{list-style:none;padding:0;margin:0;background:var(--card);
   border:1px solid var(--line);border-radius:12px}
 ul.fail li{padding:12px 18px;border-bottom:1px solid var(--line);font-size:14.5px}
 ul.fail li:last-child{border-bottom:0}
-ul.fail li.bad{color:var(--bad);border-left:3px solid var(--bad)}
+ul.fail li.bad{color:var(--pink);border-left:3px solid var(--pink)}
 .empty{padding:16px 18px;background:var(--card);border:1px solid var(--line);
   border-radius:12px;color:var(--mut);font-size:14.5px;
-  border-left:3px solid var(--good)}
+  border-left:3px solid var(--blue)}
 
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
 @media(max-width:680px){.grid{grid-template-columns:1fr}}
 .foot{margin-top:46px;color:var(--mut2);font-size:13.5px;
   border-top:1px solid var(--line);padding-top:16px;font-style:italic}
-a{color:var(--orange);text-decoration:none;border-bottom:1px solid rgba(217,119,87,0.4)}
-a:hover{border-bottom-color:var(--orange)}
+a{color:var(--purple);text-decoration:none;border-bottom:1px solid rgba(214,132,255,0.4)}
+a:hover{border-bottom-color:var(--purple);color:var(--pink)}
 
 .tagline{color:var(--mut);font-weight:600;font-size:11.5px;
   text-transform:uppercase;letter-spacing:.14em}
-.tagline .dot{color:var(--orange)}
+.tagline .dot{color:var(--pink)}
 </style></head><body><div class=wrap>
     <p class=tagline>Nerdy <span class=dot>&middot;</span> AI tutor red-team harness</p>
     <h1>Did the new tutor really teach better?</h1>
