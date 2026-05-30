@@ -26,10 +26,17 @@ def test_dashboard_renders(client):
     r = client.get("/")
     assert r.status_code == 200
     body = r.text
-    assert "Synthetic Learner Red Team Harness" in body
-    assert "baseline_v1" in body and "improved_v2" in body
-    assert "Counter-metrics" in body
-    assert "golden checks" in body
+    # Nerdy-branded layman dashboard: friendly labels, no code identifiers.
+    assert "Did the new tutor really teach better?" in body
+    assert "Old Tutor" in body and "New Tutor" in body
+    assert "Sanity checks" in body
+    assert "Quality checks pass" in body
+    # Friendly metric labels are present; raw identifiers are not.
+    assert "Did students actually learn more?" in body
+    assert "answer_giving_rate" not in body
+    # Friendly persona names are used in the per-persona table.
+    assert "The Shortcut Seeker" in body
+    assert "shortcut_seeker" not in body
 
 
 def test_api_metrics_shape(client):
