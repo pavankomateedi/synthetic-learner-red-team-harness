@@ -104,90 +104,111 @@ def _is_failing(name: str, value: float) -> bool:
     return value < thr if DIMENSIONS[name] > 0 else value > thr
 
 
-# --- Styling: Nerdy palette pulled from nerdy.com production CSS -----------
+# --- Styling: Anthropic canvas + Google data palette -----------------------
+# Anthropic chrome (cream bg, dark text, orange brand accent, Poppins/Lora type)
+# fused with Google's four-color palette (#4285F4 #EA4335 #FBBC04 #34A853)
+# for stat tiles and semantic verdicts.
 
 _CSS = """
 :root{
-  --bg:#0F0928;          /* deep nerdy purple */
-  --card:#161C2C;        /* slightly lighter panel */
-  --line:#2A2A32;
-  --ink:#FFFFFF;
-  --mut:#9E97FF;         /* soft purple */
-  --mut2:#6C6E87;
-  --accent:#17E2EA;      /* signature cyan */
-  --yellow:#FFC32B;      /* nerdy yellow */
-  --good:#17E2EA;        /* cyan = good */
-  --bad:#FB43DA;         /* magenta = bad */
-  --warn:#FFC32B;
+  /* Anthropic chrome */
+  --bg:#faf9f5;          /* Anthropic light cream */
+  --card:#ffffff;
+  --line:#e8e6dc;        /* Anthropic light gray */
+  --ink:#141413;         /* Anthropic dark */
+  --mut:#5c5b56;
+  --mut2:#b0aea5;        /* Anthropic mid gray */
+  --orange:#d97757;      /* Anthropic primary accent */
+  --a-blue:#6a9bcc;
+  --a-green:#788c5d;
+
+  /* Google four-color palette */
+  --g-blue:#4285F4;
+  --g-red:#EA4335;
+  --g-yellow:#FBBC04;
+  --g-green:#34A853;
+
+  /* Semantic (Google) */
+  --good:var(--g-green);
+  --bad:var(--g-red);
+  --warn:var(--g-yellow);
+  --info:var(--g-blue);
 }
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle at top right,#1a0f3d 0%,var(--bg) 60%);
-  color:var(--ink);min-height:100vh;
-  font:15px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.wrap{max-width:1080px;margin:0 auto;padding:36px 22px 90px}
-h1{font-size:30px;margin:0 0 6px;letter-spacing:-0.02em}
-h2{font-size:18px;margin:38px 0 6px;color:var(--ink);letter-spacing:-0.01em}
-h3{font-size:15px;margin:18px 0 8px;color:var(--accent);font-weight:600;
-  text-transform:uppercase;letter-spacing:.06em}
-.sub{color:var(--mut);margin:0 0 6px}
-.cap{color:var(--mut2);margin:0 0 16px;font-size:13.5px;max-width:780px}
-.brandbar{height:3px;width:64px;background:var(--accent);border-radius:3px;margin:14px 0 22px;
-  box-shadow:0 0 12px rgba(23,226,234,0.6)}
+body{margin:0;background:var(--bg);color:var(--ink);min-height:100vh;
+  font:15px/1.6 "Lora",Georgia,"Times New Roman",serif}
+.wrap{max-width:1080px;margin:0 auto;padding:42px 22px 90px}
 
-.summary{background:linear-gradient(135deg,rgba(23,226,234,0.08),rgba(214,132,255,0.06));
-  border:1px solid rgba(23,226,234,0.25);border-radius:16px;padding:20px 22px;margin:14px 0 28px}
-.summary p{margin:0 0 10px;font-size:15px;line-height:1.6}
-.summary p:last-child{margin-bottom:0}
-.summary strong{color:var(--accent)}
-.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
-.stat{background:rgba(15,9,40,0.6);border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px}
-.stat .n{font-size:22px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
-.stat .lbl{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;
-  margin-top:2px}
+h1,h2,h3,.tagline,.stat .n,th,.pill{font-family:"Poppins","Helvetica Neue",Arial,sans-serif}
+h1{font-size:34px;margin:0 0 8px;letter-spacing:-0.02em;font-weight:600;line-height:1.15}
+h2{font-size:20px;margin:42px 0 6px;letter-spacing:-0.01em;font-weight:600}
+h3{font-size:13px;margin:18px 0 10px;color:var(--orange);font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em}
+.sub{color:var(--mut);margin:0 0 6px;font-size:15.5px}
+.cap{color:var(--mut);margin:0 0 16px;font-size:14px;max-width:780px;font-style:italic}
+.brandbar{height:4px;width:72px;background:var(--orange);border-radius:4px;margin:18px 0 28px}
+
+.summary{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:24px 26px;margin:18px 0 32px;
+  box-shadow:0 1px 0 rgba(20,20,19,0.02),0 4px 18px rgba(20,20,19,0.04)}
+.summary p{margin:0 0 12px;font-size:16px;line-height:1.65}
+.summary p:last-of-type{margin-bottom:0}
+.summary strong{color:var(--orange);font-weight:600}
+
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;border-left:4px solid var(--g-blue)}
+.stat:nth-child(2){border-left-color:var(--g-red)}
+.stat:nth-child(3){border-left-color:var(--g-yellow)}
+.stat:nth-child(4){border-left-color:var(--g-green)}
+.stat .n{font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;
+  line-height:1.1;letter-spacing:-0.01em}
+.stat .lbl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;
+  margin-top:4px;font-family:"Poppins","Helvetica Neue",Arial,sans-serif;font-weight:500}
 @media(max-width:680px){.statgrid{grid-template-columns:repeat(2,1fr)}}
 
-.banner{padding:14px 18px;border-radius:12px;border:1px solid var(--line);
-  background:var(--card);display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin:6px 0 8px}
-.banner .big{font-size:18px;font-weight:650}
-.pill{padding:3px 11px;border-radius:999px;font-size:12px;font-weight:600}
-.pill.good{background:rgba(23,226,234,.15);color:var(--accent)}
-.pill.bad{background:rgba(251,67,218,.18);color:var(--bad)}
-.pill.warn{background:rgba(255,195,43,.18);color:var(--warn)}
+.pill{padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.02em}
+.pill.good{background:rgba(52,168,83,.12);color:#1e7e34}
+.pill.bad{background:rgba(234,67,53,.12);color:#c53122}
+.pill.warn{background:rgba(251,188,4,.18);color:#a07700}
 
 table{width:100%;border-collapse:collapse;background:var(--card);
-  border:1px solid var(--line);border-radius:12px;overflow:hidden}
-th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}
-th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;
-  background:rgba(15,9,40,0.5)}
+  border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  box-shadow:0 1px 0 rgba(20,20,19,0.02)}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line);font-size:14.5px}
+th{color:var(--mut);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;
+  background:#faf6ee}
 tr:last-child td{border-bottom:0}
-td.num{font-variant-numeric:tabular-nums;text-align:right}
-.direction{color:var(--mut2);font-size:11.5px;display:block;margin-top:2px}
+td.num{font-variant-numeric:tabular-nums;text-align:right;
+  font-family:"Poppins","Helvetica Neue",Arial,sans-serif}
+.direction{color:var(--mut2);font-size:11.5px;display:block;margin-top:2px;font-style:italic}
 
-.delta-up{color:var(--accent);font-weight:600}
+.delta-up{color:var(--good);font-weight:600}
 .delta-down{color:var(--bad);font-weight:600}
 .delta-flat{color:var(--mut2)}
-.cell-fail{color:var(--bad);font-weight:600}
-.cell-ok{color:var(--mut2)}
+.cell-fail{color:var(--bad);font-weight:600;background:rgba(234,67,53,0.06)}
+.cell-ok{color:var(--mut)}
 
-.section{margin-top:30px}
+.section{margin-top:32px}
 ul.fail{list-style:none;padding:0;margin:0;background:var(--card);
   border:1px solid var(--line);border-radius:12px}
-ul.fail li{padding:11px 16px;border-bottom:1px solid var(--line);font-size:14px}
+ul.fail li{padding:12px 18px;border-bottom:1px solid var(--line);font-size:14.5px}
 ul.fail li:last-child{border-bottom:0}
-ul.fail li.bad{color:var(--bad)}
-.empty{padding:14px 16px;background:var(--card);border:1px solid var(--line);
-  border-radius:12px;color:var(--mut);font-size:14px}
+ul.fail li.bad{color:var(--bad);border-left:3px solid var(--bad)}
+.empty{padding:16px 18px;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;color:var(--mut);font-size:14.5px;
+  border-left:3px solid var(--good)}
 
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
 @media(max-width:680px){.grid{grid-template-columns:1fr}}
-.foot{margin-top:42px;color:var(--mut2);font-size:13px;
-  border-top:1px solid var(--line);padding-top:14px}
-a{color:var(--accent);text-decoration:none;border-bottom:1px dashed rgba(23,226,234,0.4)}
-a:hover{border-bottom-style:solid}
+.foot{margin-top:46px;color:var(--mut);font-size:13.5px;
+  border-top:1px solid var(--line);padding-top:16px;font-style:italic}
+a{color:var(--orange);text-decoration:none;border-bottom:1px solid rgba(217,119,87,0.35)}
+a:hover{border-bottom-color:var(--orange)}
 
-.tagline{color:var(--yellow);font-weight:600;font-size:12.5px;
-  text-transform:uppercase;letter-spacing:.1em}
+.tagline{color:var(--mut);font-weight:600;font-size:11.5px;
+  text-transform:uppercase;letter-spacing:.14em}
+.tagline .dot{color:var(--orange)}
 """
 
 
@@ -200,10 +221,19 @@ def _pill(verdict: str, label: str | None = None) -> str:
     return f'<span class="pill {cls}">{_esc(label or verdict)}</span>'
 
 
+_FONTS = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
+    'family=Poppins:wght@500;600;700&family=Lora:ital,wght@0,400;0,500;1,400'
+    '&display=swap">'
+)
+
+
 def _page(title: str, body: str) -> str:
     return ("<!doctype html><html lang=en><head><meta charset=utf-8>"
             "<meta name=viewport content='width=device-width,initial-scale=1'>"
-            f"<title>{_esc(title)}</title><style>{_CSS}</style></head>"
+            f"<title>{_esc(title)}</title>{_FONTS}<style>{_CSS}</style></head>"
             f"<body><div class=wrap>{body}</div></body></html>")
 
 
@@ -353,7 +383,7 @@ def dashboard() -> HTMLResponse:
         regression_html = "<div class=empty>Nothing got worse.</div>"
 
     body = f"""
-    <p class=tagline>Nerdy &middot; AI tutor red-team harness</p>
+    <p class=tagline>Nerdy <span class=dot>&middot;</span> AI tutor red-team harness</p>
     <h1>Did the new tutor really teach better?</h1>
     <p class=sub>A stress-test of an AI fractions tutor using 8 kinds of simulated students.</p>
     <div class=brandbar></div>
