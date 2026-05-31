@@ -359,7 +359,12 @@ def _persona_table(m: TutorMetrics) -> str:
 
 
 def _falls_short_section(loop: LoopResult) -> str:
-    """Surface per-persona threshold failures + V1->V2 regressions, sorted by severity."""
+    """Per-persona summary table of below-target measures and V1->V2 regressions.
+
+    A table (vs. the previous list of long sentences) makes count, failing
+    dimensions, and regressions instantly comparable down a column. Sorted by
+    severity (issues = failing + regressions) descending.
+    """
     metrics = loop.improved
     items = []
     for pid, scores in metrics.per_persona.items():
@@ -372,21 +377,22 @@ def _falls_short_section(loop: LoopResult) -> str:
     if not items:
         return ("<div class=empty>The new tutor passes every measure for every "
                 "student type.</div>")
-    rows = []
-    for pid, failing, regs in items:
-        bits = []
-        if failing:
-            labs = " &middot; ".join(_esc(SHORT_LABELS[n]) for n in failing)
-            n_fail = len(failing)
-            bits.append(f"<strong>{n_fail} below target:</strong> {labs}")
-        if regs:
-            labs = " &middot; ".join(_esc(SHORT_LABELS[n]) for n in regs)
-            bits.append(f"<strong>worse than old tutor on:</strong> {labs}")
-        rows.append(
-            f"<li class=bad><strong>{_esc(_persona_name(pid))}</strong> &mdash; "
-            f"{' &nbsp; '.join(bits)}</li>"
-        )
-    return f"<ul class=fail>{''.join(rows)}</ul>"
+
+    def _cell(names: list[str]) -> str:
+        if not names:
+            return "<td class=cell-ok>&mdash;</td>"
+        labs = " &middot; ".join(_esc(SHORT_LABELS[n]) for n in names)
+        return f"<td class=cell-fail>{labs}</td>"
+
+    rows = [
+        f"<tr><td>{_esc(_persona_name(pid))}</td>"
+        f"<td class=num>{len(failing) + len(regs)}</td>"
+        f"{_cell(failing)}{_cell(regs)}</tr>"
+        for pid, failing, regs in items
+    ]
+    return ("<table><tr><th>Student type</th><th>Issues</th>"
+            "<th>Below target</th><th>Worse than Old Tutor</th></tr>"
+            + "".join(rows) + "</table>")
 
 
 def _failure_block(m: TutorMetrics) -> str:
