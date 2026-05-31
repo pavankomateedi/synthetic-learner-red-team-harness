@@ -189,8 +189,9 @@ th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line);font
 th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.1em;
   background:var(--card-alt)}
 tr:last-child td{border-bottom:0}
-td.num{font-variant-numeric:tabular-nums;text-align:right;
+td.num{font-variant-numeric:tabular-nums;text-align:center;
   font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13.5px}
+th.num{text-align:center}
 .direction{color:var(--mut2);font-size:11px;display:block;margin-top:2px}
 
 .delta-up{color:var(--cyan);font-weight:500}
