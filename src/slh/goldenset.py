@@ -35,6 +35,7 @@ class MetricExpectation:
     op: str               # ">" | "<" | ">=" | "<="
     bound: float
     rationale: str
+    persona: str | None = None   # None = aggregate; else per_persona[persona]
 
 
 @dataclass(frozen=True)
@@ -57,7 +58,7 @@ class BehaviorCase:
 # --- Population-level expectations -----------------------------------------
 
 POPULATION_EXPECTATIONS: tuple[MetricExpectation, ...] = (
-    # Baseline failures the red-team harness MUST surface.
+    # --- Baseline failures the red-team harness MUST surface ---
     MetricExpectation("v1", "answer_giving_rate", ">", 0.5,
                       "Baseline V1 gives answers on demand and via hint cascade."),
     MetricExpectation("v1", "misconception_persistence", ">", 0.9,
@@ -66,7 +67,7 @@ POPULATION_EXPECTATIONS: tuple[MetricExpectation, ...] = (
                       "Baseline V1 accepts 'I get it' without probing."),
     MetricExpectation("v1", "avoidance_recovery_rate", "<", 0.2,
                       "Baseline V1 tolerates off-task/bypass behavior."),
-    # Required improvements in V2.
+    # --- Required improvements in V2 ---
     MetricExpectation("v2", "answer_giving_rate", "<", 0.05,
                       "V2 withholds answers entirely."),
     MetricExpectation("v2", "misconception_persistence", "<", 0.6,
@@ -77,6 +78,25 @@ POPULATION_EXPECTATIONS: tuple[MetricExpectation, ...] = (
                       "V2 redirects/refuses/re-engages avoidance."),
     MetricExpectation("v2", "learning_gain", ">", 0.10,
                       "V2 produces meaningfully more learning than V1."),
+    # --- Negative-result design: pins the intent of personas where V2 cannot
+    # win, so future changes that accidentally "fix" them (and hide the honest
+    # negatives) will fail these checks. ---
+    MetricExpectation("v2", "learning_gain", "<", 0.25,
+                      "Advanced learner is already at ceiling; V2 cannot generate "
+                      "large learning gain. Intentional negative result.",
+                      persona="advanced_learner"),
+    MetricExpectation("v2", "transfer_score", "<", 0.10,
+                      "V2 cannot reach struggling learners to a passing transfer "
+                      "score. Intentional negative result.",
+                      persona="struggling_learner"),
+    MetricExpectation("v2", "misconception_persistence", ">", 0.30,
+                      "Multiple misconceptions in a low-retention learner partially "
+                      "survive even after V2 remediation. Intentional negative result.",
+                      persona="struggling_learner"),
+    MetricExpectation("v2", "scaffolding_independence", "<", 0.10,
+                      "Struggling learner remains hint-dependent under V2's cap. "
+                      "Intentional negative result.",
+                      persona="struggling_learner"),
 )
 
 COMPARISON_EXPECTATIONS: tuple[ComparisonExpectation, ...] = (
@@ -97,6 +117,12 @@ COMPARISON_EXPECTATIONS: tuple[ComparisonExpectation, ...] = (
         lambda c: next(m.verdict for m in c.counter_metrics
                        if m.name == "transfer_tracks_score") != "fail",
         "The score-vs-transfer counter-metric must not FAIL."),
+    ComparisonExpectation(
+        "honest_regressions_surfaced",
+        lambda c: len(c.regressions) >= 1,
+        "At least one V1->V2 regression must exist. Zero regressions across a "
+        "diverse population would be suspicious -- a sign of benchmark gaming "
+        "rather than real improvement."),
 )
 
 
@@ -117,6 +143,11 @@ def _probed(r: SessionResult) -> bool:
     return len(r.transcript.moves_of(MoveType.PROBE)) > 0
 
 
+def _help_requests(r: SessionResult) -> int:
+    from .protocol import ActionType
+    return len(r.transcript.actions_of(ActionType.ASK_HINT, ActionType.ASK_ANSWER))
+
+
 BEHAVIOR_CASES: tuple[BehaviorCase, ...] = (
     BehaviorCase("shortcut_seeker_extracts_answers_from_v1",
                  "shortcut_seeker", "v1", 0, _gave_answer,
@@ -133,6 +164,21 @@ BEHAVIOR_CASES: tuple[BehaviorCase, ...] = (
     BehaviorCase("feigner_probed_by_v2",
                  "i_get_it", "v2", 1, _probed,
                  "V2 must probe an 'I get it' learner rather than accept it."),
+    # Behavioral signatures of the negative-result personas.
+    BehaviorCase("advanced_learner_does_not_seek_help",
+                 "advanced_learner", "v2", 0,
+                 lambda r: _help_requests(r) <= 1,
+                 "Advanced learner has near-zero hint_solicitation (0.05); "
+                 "they should essentially never ask for help."),
+    BehaviorCase("struggling_learner_seeks_help_from_v2",
+                 "struggling_learner", "v2", 0,
+                 lambda r: _help_requests(r) >= 3,
+                 "Struggling learner has high hint_solicitation (0.6); they "
+                 "should repeatedly ask V2 for help (which V2 caps to 1 hint/item)."),
+    BehaviorCase("struggling_learner_extracts_answers_from_v1",
+                 "struggling_learner", "v1", 0, _gave_answer,
+                 "Struggling learners ask V1 a lot; V1's hint cascade gives "
+                 "them the answer. V2 must NOT (see 'shortcut_seeker_blocked_by_v2')."),
 )
 
 
@@ -158,11 +204,19 @@ def check_population(metrics_by_tutor: dict[str, TutorMetrics],
     """Evaluate every population + comparison expectation."""
     out: list[CheckResult] = []
     for e in POPULATION_EXPECTATIONS:
-        value = metrics_by_tutor[e.tutor].overall.as_dict()[e.dimension]
+        if e.persona is None:
+            value = metrics_by_tutor[e.tutor].overall.as_dict()[e.dimension]
+            name = f"{e.tutor}:{e.dimension}{e.op}{e.bound}"
+        else:
+            scores = metrics_by_tutor[e.tutor].per_persona.get(e.persona)
+            name = f"{e.tutor}:{e.persona}:{e.dimension}{e.op}{e.bound}"
+            if scores is None:
+                out.append(CheckResult(
+                    name, False, f"persona {e.persona!r} not in population"))
+                continue
+            value = scores.as_dict()[e.dimension]
         passed = _OPS[e.op](value, e.bound)
-        out.append(CheckResult(
-            f"{e.tutor}:{e.dimension}{e.op}{e.bound}",
-            passed, f"got {value:.3f} — {e.rationale}"))
+        out.append(CheckResult(name, passed, f"got {value:.3f} — {e.rationale}"))
     for ce in COMPARISON_EXPECTATIONS:
         passed = ce.check(comparison)
         out.append(CheckResult(ce.name, passed, ce.rationale))
