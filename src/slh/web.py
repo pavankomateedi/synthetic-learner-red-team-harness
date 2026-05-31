@@ -157,7 +157,7 @@ h3{font-size:13px;margin:18px 0 10px;color:var(--accent);font-weight:600;
 .summary p:last-of-type{margin-bottom:0}
 .summary strong{color:var(--accent);font-weight:600}
 
-.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .stat{background:#150c33;border:1px solid var(--line);border-radius:10px;
   padding:12px 14px;border-left:4px solid var(--blue)}
 .stat:nth-child(2){border-left-color:var(--purple)}
@@ -248,6 +248,18 @@ def _exec_summary(loop: LoopResult, passed: int, total: int) -> str:
 
     return f"""
     <div class=summary>
+      <div class=statgrid>
+        <div class=stat><div class=n>200</div>
+          <div class=lbl>Sessions per tutor</div></div>
+        <div class=stat><div class=n>{improved}/7</div>
+          <div class=lbl>Measures improved</div></div>
+        <div class=stat><div class=n>{passed}/{total}</div>
+          <div class=lbl>Quality checks pass</div></div>
+        <div class=stat><div class=n>{regressions}</div>
+          <div class=lbl>Honest regressions</div></div>
+      </div>
+    </div>
+    <div class=summary>
       <p>{EXEC_SUMMARY_HEAD}</p>
       <p>The <strong>Old Tutor</strong> failed in <strong>6 of 7</strong> ways &mdash;
         it handed out answers on demand, accepted "I get it" without checking, left
@@ -259,16 +271,6 @@ def _exec_summary(loop: LoopResult, passed: int, total: int) -> str:
       <p>One honest weakness remains and is reported below rather than hidden:
         the New Tutor still scores low on a "students working independently"
         measure that arguably penalizes good support.</p>
-      <div class=statgrid>
-        <div class=stat><div class=n>200</div>
-          <div class=lbl>Sessions per tutor</div></div>
-        <div class=stat><div class=n>{improved}/7</div>
-          <div class=lbl>Measures improved</div></div>
-        <div class=stat><div class=n>{passed}/{total}</div>
-          <div class=lbl>Quality checks pass</div></div>
-        <div class=stat><div class=n>{regressions}</div>
-          <div class=lbl>Honest regressions</div></div>
-      </div>
     </div>
     """
 
