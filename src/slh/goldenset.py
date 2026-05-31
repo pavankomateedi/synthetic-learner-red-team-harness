@@ -118,11 +118,24 @@ COMPARISON_EXPECTATIONS: tuple[ComparisonExpectation, ...] = (
                        if m.name == "transfer_tracks_score") != "fail",
         "The score-vs-transfer counter-metric must not FAIL."),
     ComparisonExpectation(
-        "honest_regressions_surfaced",
-        lambda c: len(c.regressions) >= 1,
-        "At least one V1->V2 regression must exist. Zero regressions across a "
-        "diverse population would be suspicious -- a sign of benchmark gaming "
-        "rather than real improvement."),
+        "honest_negatives_pinned",
+        lambda c: (
+            # Either an aggregate regression exists OR a regression on a
+            # designed negative-result persona (advanced_learner or
+            # struggling_learner). A bare count of regressions would be
+            # satisfiable by 0.02-magnitude noise from any persona; this
+            # anchors the check to the personas we INTENTIONALLY added to
+            # surface honest negatives, so noise on other personas can't
+            # mask a "fixed everyone" outcome.
+            any("/" not in r for r in c.regressions)
+            or any(r.startswith("advanced_learner/") for r in c.regressions)
+            or any(r.startswith("struggling_learner/") for r in c.regressions)
+        ),
+        "Anti-gaming: at least one regression must exist on an aggregate "
+        "dimension or on a designed negative-result persona "
+        "(advanced_learner / struggling_learner). Pure noise regressions on "
+        "other personas don't satisfy this -- those are statistical artifacts, "
+        "not the honest negatives we deliberately surface."),
 )
 
 

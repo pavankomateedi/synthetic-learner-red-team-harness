@@ -31,14 +31,23 @@ def main() -> int:
     metrics = web.api_metrics().body.decode("utf-8")
 
     # Re-point dynamic endpoints at the static artifact (no server on Pages).
+    # Any page that should contain the API link MUST have it rewritten; if the
+    # target string drifts we fail loudly instead of silently shipping a broken
+    # absolute link on GitHub Pages.
+    api_old = '<a href="/api/metrics">/api/metrics</a>'
+    api_new = '<a href="metrics.json">metrics.json</a>'
+    pages_expected_to_link = {"index.html"}  # only the engineering view links it today
     for name, html in pages.items():
-        old = '<a href="/api/metrics">/api/metrics</a>'
-        new = '<a href="metrics.json">metrics.json</a>'
-        if old in html:
-            html = html.replace(old, new)
-        old2 = ' &middot;\n      health at <a href="/healthz">/healthz</a>'
-        if old2 in html:
-            html = html.replace(old2, "")
+        if name in pages_expected_to_link:
+            if api_old not in html:
+                raise SystemExit(
+                    f"build_static: page {name!r} was expected to contain "
+                    f"{api_old!r} for rewrite to {api_new!r}, but it's not there. "
+                    "The dashboard footer has drifted -- update either the "
+                    "footer in slh/web.py or this rewrite target so the static "
+                    "export doesn't ship a broken absolute /api/metrics link."
+                )
+            html = html.replace(api_old, api_new)
         pages[name] = html
 
     out.mkdir(parents=True, exist_ok=True)

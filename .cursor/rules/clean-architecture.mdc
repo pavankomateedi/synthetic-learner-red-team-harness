@@ -1,0 +1,52 @@
+---
+description: Architectural principles — dependency direction, layering, module responsibility
+alwaysApply: true
+---
+
+# Clean Architecture
+
+> **DRAFT — starter content generated to satisfy CLAUDE.md's always-apply
+> contract. Review and customize. The 11 high-level rules in CLAUDE.md
+> remain authoritative; this file is the more-specific layer for
+> architectural concerns.**
+
+## Layering
+
+Each project layer depends only on layers below it. Never the reverse.
+
+| Layer | Examples here | Depends on |
+|---|---|---|
+| Presentation | `web.py`, `cli.py`, `report.py` | Orchestration |
+| Orchestration | `harness.py`, `session.py` | Engine + Eval |
+| Engine | `learner.py`, `tutor.py` | Domain + Protocol |
+| Evaluation | `evaluator.py`, `comparator.py`, `detectors.py`, `goldenset.py` | Domain + Protocol |
+| Domain | `curriculum.py`, `personas.py`, `protocol.py` | (none) |
+
+Concretely:
+- A change to `curriculum.py` may force changes in any layer above, never below.
+- The dashboard (`web.py`) must never be imported by the harness — only the
+  reverse.
+- Tests live in `tests/`, parallel to `src/`, and import only public surfaces
+  (no `from slh.web._private import ...`).
+
+## Module responsibility
+
+One reason to change per module. If a module has two unrelated reasons to be
+edited, it's two modules waiting to be split.
+
+When extending:
+- New eval dimension → `evaluator.py` + `report.py` thresholds + golden gate.
+- New persona archetype → `personas.py` only (don't fork policy into another file).
+- New tutor version → `tutor.py` subclass; do not duplicate session logic.
+- New audience view → one function in `web.py`; share helpers (`_persona_table`,
+  `_falls_short_section`, `_nav`); the build script renders it to a static
+  file.
+
+## Anti-patterns
+
+- Reaching across a layer (e.g. `web.py` calling `session.run_session`
+  directly): route through `harness.py` instead.
+- A "utils" module that grows into a junk drawer: split by responsibility once
+  it exceeds a single coherent concern.
+- Circular imports: usually a signal that a shared type should live in
+  `protocol.py`.

@@ -28,7 +28,11 @@ def test_comparison_report_has_required_sections():
 
 
 def test_cli_check_returns_zero(capsys):
-    assert main(["--seeds", "8", "check"]) == 0
+    # Use the canonical golden seed count (25): the goldenset contract
+    # (incl. honest_negatives_pinned, which anchors on documented
+    # negative-result persona regressions) is calibrated at 25 seeds.
+    # Smaller counts may not produce the designed regressions.
+    assert main(["--seeds", "25", "check"]) == 0
     assert "checks passed" in capsys.readouterr().out
 
 

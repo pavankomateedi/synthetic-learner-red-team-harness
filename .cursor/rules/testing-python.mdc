@@ -1,0 +1,84 @@
+---
+description: Python testing — pytest patterns, fixtures, coverage, intent-naming, golden sets
+alwaysApply: true
+---
+
+# Testing Python
+
+> **DRAFT — starter content generated to satisfy CLAUDE.md's always-apply
+> contract. Review and customize. Extends CLAUDE.md Rule 8 (Tests verify
+> intent, not just behavior).**
+
+## Structure
+
+- Tests live in `tests/` mirroring `src/slh/` (`tests/test_<module>.py`).
+- One concern per file. Don't bundle web tests with curriculum tests.
+- Use `pytest` only. No `unittest`-style classes unless interop forces it.
+
+## Names encode intent
+
+A test name is a sentence: `test_<subject>_<expected_behavior>_<condition>`.
+- ✅ `test_v1_accepts_shallow_compliance`
+- ✅ `test_persona_pairs_differ_in_at_least_three_dimensions`
+- ❌ `test_v1_method_1`
+- ❌ `test_check_works`
+
+If the test name doesn't read as a claim about the system, the test is testing
+the wrong thing.
+
+## Fixtures
+
+- Function-scoped by default. Module/session scope only when setup is
+  genuinely expensive AND the test order doesn't matter.
+- Mutating module-scoped fixtures (env, caches, file system) MUST restore
+  on teardown. Use `pytest.MonkeyPatch()` with `mp.undo()`, not raw
+  `os.environ[...] = ...`.
+- Fixture names describe what they provide, not how:
+  - ✅ `client` (returns a TestClient)
+  - ❌ `setup_client_and_clear_cache`
+
+## Assertions
+
+- One claim per test. If you need multiple `assert`s, they should all be
+  describing facets of the same claim.
+- Assertion failure messages are part of the test — name what was expected
+  vs. observed when not obvious from the values: `assert x == 3, f"expected
+  3 deltas, got {x}"`.
+- Don't assert "everything looks fine" by counting checks (`assert
+  passed == total`). That couples the test to every gate elsewhere and
+  noise propagates. Assert the structural shape you care about.
+
+## Coverage
+
+- `pytest --cov=slh --cov-fail-under=85` is enforced in `pyproject.toml`.
+- 100% coverage is not a goal; covered-and-meaningful is. A line covered by a
+  test that doesn't assert on it is not really covered.
+- Add `# pragma: no cover` to unreachable / launcher / `__main__` blocks; do
+  not add it to silence a missing test.
+
+## Golden sets
+
+- Golden expectations live in `slh/goldenset.py` as a typed structure, not
+  scattered as inline asserts.
+- Each expectation has a `rationale` field naming the intent it pins. A check
+  with no rationale is a check waiting to flake.
+- Per-persona / per-dimension scope expectations use the `persona` field on
+  `MetricExpectation` rather than inventing parallel data structures.
+- Add a gate when you add a behavior, not later. The gate is the proof the
+  behavior persists.
+
+## Determinism
+
+- Seeded RNG everywhere; never `random.random()` without a seed.
+- `Date.now()` / `time.time()` calls in tests must be frozen or mocked.
+- Floating-point assertions use `pytest.approx(...)` with an explicit
+  tolerance, not bare `==`.
+
+## What NOT to test
+
+- Don't test third-party libraries.
+- Don't test getters/setters or `__init__` boilerplate.
+- Don't test logging output unless logging IS the contract.
+- Don't write a test that fails when behavior is right but cosmetic phrasing
+  changes (asserting on substring presence is OK; asserting on exact byte
+  count is brittle).

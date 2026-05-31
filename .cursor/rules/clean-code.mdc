@@ -1,0 +1,64 @@
+---
+description: Code style — naming, function size, comments, error handling, formatting
+alwaysApply: true
+---
+
+# Clean Code
+
+> **DRAFT — starter content generated to satisfy CLAUDE.md's always-apply
+> contract. Review and customize.**
+
+## Names
+
+- Names describe intent. `_falling_dims` is good; `_helper2` is not.
+- Booleans read as predicates: `is_failing`, `has_misconceptions`, not
+  `failing` or `misconceptions_bool`.
+- Private helpers are `_prefixed`. Exported public surface is bare.
+- No abbreviations except domain-standard ones (e.g. `pid` for persona id is
+  OK because the codebase uses it everywhere).
+
+## Function size
+
+- A function does one thing. If you need an "and" in the docstring, split it.
+- ~30 lines is a soft ceiling. Above 50, justify in a comment or split.
+- Pure functions over side-effecting ones where possible. The evaluator and
+  report renderers should not mutate state.
+
+## Comments
+
+- Comments explain **why**, not what. The code already shows what.
+- A comment that restates a one-liner is noise — delete it.
+- Docstrings on public functions state purpose + non-obvious contract,
+  not the parameter types (those are in annotations).
+- Inline `# noqa: <rule>` is allowed when justified by a short tail comment.
+
+## Error handling
+
+- Fail loud (CLAUDE.md Rule 11). Don't swallow exceptions silently.
+- `try/except Exception: pass` requires a `# noqa` and a comment explaining
+  why this is best-effort.
+- Custom exception types only when callers need to discriminate; otherwise
+  use stdlib (`ValueError`, `KeyError`, `RuntimeError`).
+- Validation happens at boundaries (CLI args, env vars, HTTP inputs) and once
+  validated, internal code can assume invariants.
+
+## Formatting
+
+- `ruff check` is law. `ruff format` is the formatter. Don't argue with it.
+- Line length: 100 chars (set in `pyproject.toml`).
+- Tests get `E501` ignored — long assertion messages are OK.
+
+## Imports
+
+- Top-of-module imports only. Deferred imports inside a function require a
+  comment explaining the cycle being broken or the optional dependency being
+  guarded.
+- Group: stdlib, then third-party, then `.` local. Sorted alphabetically
+  within each group.
+
+## Type annotations
+
+- Public functions and dataclass fields are annotated.
+- Internal helpers may skip annotations when obvious; prefer them when
+  signatures get complex.
+- `from __future__ import annotations` at every file top so forward refs work.

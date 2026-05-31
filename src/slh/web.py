@@ -74,17 +74,17 @@ SECTION_CAPTIONS = {
     "falls_short": ("Where the new tutor still falls short, per student type. "
                     "Includes honest regressions where it does worse than the old tutor. "
                     "We surface these instead of hiding them."),
-    "personas": "Eight kinds of students we tried. Red squares mean the new tutor "
+    "personas": "Each row is a kind of student we tried. Red squares mean the new tutor "
                 "is still falling short for that student on that measure.",
     "failures": "What each tutor still gets wrong. Fewer items here = better tutor. "
                 "Empty would mean nothing is broken.",
 }
 
-EXEC_SUMMARY_HEAD = (
-    "We stress-tested an AI fractions tutor by sending 200 simulated students through it — "
-    "students who beg for answers, fake understanding, panic, try to trick the tutor, "
-    "or memorize without learning."
-)
+def _exec_summary_head(n_sessions: int) -> str:
+    return (f"We stress-tested an AI fractions tutor by sending {n_sessions} "
+            "simulated students through it &mdash; students who beg for answers, "
+            "fake understanding, panic, try to trick the tutor, or memorize "
+            "without learning.")
 
 
 def _seeds() -> int:
@@ -272,17 +272,34 @@ def _page(title: str, body: str) -> str:
 
 def _exec_summary(loop: LoopResult, passed: int, total: int) -> str:
     cmp = loop.comparison
+    b, m = loop.baseline, loop.improved
+    n_dims = len(DIMENSIONS)
     improved = sum(1 for d in cmp.deltas if d.improved_flag)
     regressions = len(cmp.regressions)
     cm_fail = any(c.verdict == "fail" for c in cmp.counter_metrics)
     overall = "real, measurable" if cmp.overall_improved and not cm_fail else "inconclusive"
 
+    v1_failing = sum(1 for n, v in b.overall.as_dict().items() if _is_failing(n, v))
+    v2_failing = sum(1 for n, v in m.overall.as_dict().items() if _is_failing(n, v))
+    v2_fixed = max(0, v1_failing - v2_failing)
+    n_counter = len(cmp.counter_metrics)
+    cm_passed = sum(1 for c in cmp.counter_metrics if c.verdict == "pass")
+
+    if regressions == 0:
+        weakness_line = ("<strong>No honest regressions</strong> remain at the "
+                         "current run &mdash; persona-level shortfalls are listed below.")
+    else:
+        word = "weakness" if regressions == 1 else "weaknesses"
+        verb = "remains" if regressions == 1 else "remain"
+        weakness_line = (f"<strong>{regressions} honest {word}</strong> {verb} "
+                         "and are reported below rather than hidden.")
+
     return f"""
     <div class=summary>
       <div class=statgrid>
-        <div class=stat><div class=n>200</div>
+        <div class=stat><div class=n>{m.n_sessions}</div>
           <div class=lbl>Sessions per tutor</div></div>
-        <div class=stat><div class=n>{improved}/7</div>
+        <div class=stat><div class=n>{improved}/{n_dims}</div>
           <div class=lbl>Measures improved</div></div>
         <div class=stat><div class=n>{passed}/{total}</div>
           <div class=lbl>Quality checks pass</div></div>
@@ -291,17 +308,15 @@ def _exec_summary(loop: LoopResult, passed: int, total: int) -> str:
       </div>
     </div>
     <div class=summary>
-      <p>{EXEC_SUMMARY_HEAD}</p>
-      <p>The <strong>Old Tutor</strong> failed in <strong>6 of 7</strong> ways &mdash;
-        it handed out answers on demand, accepted "I get it" without checking, left
-        misconceptions intact, and ignored off-task behavior.
-        The <strong>New Tutor</strong> fixed <strong>4 of those 6</strong>, with
-        {overall} learning gains.
-        We ran <strong>4 sanity checks</strong> designed to catch us cheating;
-        all passed.</p>
-      <p>One honest weakness remains and is reported below rather than hidden:
-        the New Tutor still scores low on a "students working independently"
-        measure that arguably penalizes good support.</p>
+      <p>{_exec_summary_head(m.n_sessions)}</p>
+      <p>The <strong>Old Tutor</strong> failed in <strong>{v1_failing} of {n_dims}</strong>
+        ways &mdash; it handed out answers on demand, accepted "I get it" without checking,
+        left misconceptions intact, and ignored off-task behavior.
+        The <strong>New Tutor</strong> fixed <strong>{v2_fixed} of those {v1_failing}</strong>,
+        with {overall} learning gains.
+        We ran <strong>{cm_passed} of {n_counter} sanity checks</strong>
+        designed to catch us cheating.</p>
+      <p>{weakness_line}</p>
     </div>
     """
 
@@ -361,27 +376,36 @@ def _persona_table(m: TutorMetrics) -> str:
 def _falls_short_section(loop: LoopResult) -> str:
     """Per-persona summary table of below-target measures and V1->V2 regressions.
 
-    A table (vs. the previous list of long sentences) makes count, failing
-    dimensions, and regressions instantly comparable down a column. Sorted by
-    severity (issues = failing + regressions) descending.
+    Also surfaces any aggregate (non-persona) regressions as a banner above the
+    table. Sort: persona with most issues first, stable tie-break on pid so the
+    public-facing order doesn't flip on dict reordering.
     """
     metrics = loop.improved
+    # Aggregate regressions are bare dim names; per-persona are "pid/dim".
+    aggregate_regs = [r for r in loop.comparison.regressions if "/" not in r]
+
     items = []
     for pid, scores in metrics.per_persona.items():
-        sd = scores.as_dict()
-        failing = [n for n in DIMENSIONS if _is_failing(n, sd[n])]
-        regs = [r.split("/")[1] for r in loop.comparison.regressions if r.startswith(f"{pid}/")]
+        failing = _failing_dims(scores)
+        regs = [r.split("/", 1)[1] for r in loop.comparison.regressions
+                if r.startswith(f"{pid}/")]
         if failing or regs:
             items.append((pid, failing, regs))
-    items.sort(key=lambda x: (-(len(x[1]) + len(x[2])), -len(x[2])))
+    items.sort(key=lambda x: (-(len(x[1]) + len(x[2])), x[0]))
+
+    banner = ""
+    if aggregate_regs:
+        labs = " &middot; ".join(_esc(SHORT_LABELS.get(n, n)) for n in aggregate_regs)
+        banner = (f"<div class=empty style='border-left-color:var(--bad)'>"
+                  f"<strong>Overall regression(s):</strong> {labs}</div>")
     if not items:
-        return ("<div class=empty>The new tutor passes every measure for every "
-                "student type.</div>")
+        return banner or ("<div class=empty>The new tutor passes every measure for every "
+                          "student type.</div>")
 
     def _cell(names: list[str]) -> str:
         if not names:
             return "<td class=cell-ok>&mdash;</td>"
-        labs = " &middot; ".join(_esc(SHORT_LABELS[n]) for n in names)
+        labs = " &middot; ".join(_esc(SHORT_LABELS.get(n, n)) for n in names)
         return f"<td class=cell-fail>{labs}</td>"
 
     rows = [
@@ -390,9 +414,10 @@ def _falls_short_section(loop: LoopResult) -> str:
         f"{_cell(failing)}{_cell(regs)}</tr>"
         for pid, failing, regs in items
     ]
-    return ("<table><tr><th>Student type</th><th>Issues</th>"
-            "<th>Below target</th><th>Worse than Old Tutor</th></tr>"
-            + "".join(rows) + "</table>")
+    table = ("<table><tr><th>Student type</th><th>Issues</th>"
+             "<th>Below target</th><th>Worse than Old Tutor</th></tr>"
+             + "".join(rows) + "</table>")
+    return banner + table
 
 
 def _failure_block(m: TutorMetrics) -> str:
@@ -514,11 +539,16 @@ def dashboard() -> HTMLResponse:
       </div>
     </div>
 
-    <p class=foot>Built for Nerdy &middot; 200 sessions per tutor &middot;
+    <p class=foot>Built for Nerdy &middot; {loop.improved.n_sessions} sessions per tutor &middot;
       results are deterministic and reproducible &middot;
-      raw data at <a href="/api/metrics">metrics.json</a></p>
+      raw data at <a href="/api/metrics">/api/metrics</a></p>
     """
     return HTMLResponse(_page("Nerdy Tutor Stress-Test", body))
+
+
+def _pluralize(n: int, singular: str, plural: str | None = None) -> str:
+    """'1 thing' / 'N things' with optional irregular plural."""
+    return f"{n} {singular}" if n == 1 else f"{n} {plural or singular + 's'}"
 
 
 @app.get("/teacher.html", response_class=HTMLResponse)
@@ -530,6 +560,21 @@ def dashboard_teacher() -> HTMLResponse:
     answer_giving_pct = int(round(overall["answer_giving_rate"] * 100))
     recovery_pct = int(round(overall["avoidance_recovery_rate"] * 100))
     mis_persist_pct = int(round(overall["misconception_persistence"] * 100))
+
+    n_struggling = c["still_struggling"]
+    n_regressions = len(loop.comparison.regressions)
+    struggling_phrase = (
+        f"There {'is' if n_struggling == 1 else 'are'} "
+        f"<strong>{_pluralize(n_struggling, 'student type')}</strong> "
+        f"it cannot reach to a passing threshold"
+    )
+    if n_regressions == 0:
+        regression_phrase = "and no student type for whom it is actively worse than the old tutor"
+    elif n_regressions == 1:
+        regression_phrase = "and one student type for whom it makes a small thing worse"
+    else:
+        regression_phrase = (f"and {n_regressions} student types "
+                             "for whom it makes a small thing worse")
 
     body = f"""
     <p class=tagline>For teachers <span class=dot>&middot;</span> Pedagogical review</p>
@@ -555,9 +600,8 @@ def dashboard_teacher() -> HTMLResponse:
         misconceptions</strong> (like "add across the top and bottom" or "bigger
         denominator means bigger fraction"). The old tutor did the opposite of
         all three.</p>
-      <p class=lead>It is <strong>not</strong> a replacement for a teacher. There are
-        {c["still_struggling"]} student types it cannot reach to a passing
-        threshold, and one type for whom it actively makes a small thing worse.
+      <p class=lead>It is <strong>not</strong> a replacement for a teacher.
+        {struggling_phrase}, {regression_phrase}.
         Those are listed below, not buried.</p>
     </div>
 
@@ -595,20 +639,40 @@ def dashboard_teacher() -> HTMLResponse:
     return HTMLResponse(_page("For Teachers — Nerdy Tutor Review", body))
 
 
+def _answer_giving_word(rate: float) -> str:
+    """Tiered word for 'how often the tutor hands out answers'."""
+    if rate < 0.02:
+        return "never"
+    if rate < 0.10:
+        return "rarely"
+    if rate < 0.30:
+        return "sometimes"
+    return "often"
+
+
+def _failing_dims(scores) -> list[str]:
+    """Return the list of dimensions where this persona is below its threshold."""
+    sd = scores.as_dict()
+    return [n for n in DIMENSIONS if _is_failing(n, sd[n])]
+
+
 @app.get("/parents.html", response_class=HTMLResponse)
 def dashboard_parents() -> HTMLResponse:
     loop = _loop(_seeds())
     c = _counts(loop)
     m = loop.improved
     overall = m.overall.as_dict()
-    answer_giving = "never" if overall["answer_giving_rate"] < 0.02 else "rarely"
+    answer_giving = _answer_giving_word(overall["answer_giving_rate"])
+    n_personas = c["n_personas"] or 1   # guard divide-by-zero / max() on empty
+    sessions_per = m.n_sessions // n_personas
 
-    # Identify the worst-off persona (to name in the honest-weakness section)
-    worst = max(
-        ((pid, scores) for pid, scores in m.per_persona.items()),
-        key=lambda x: sum(1 for d in DIMENSIONS if _is_failing(d, x[1].as_dict()[d])),
+    # Per-persona failing dims, sorted worst-first with stable tie-break on pid.
+    struggling = sorted(
+        ((pid, _failing_dims(scores)) for pid, scores in m.per_persona.items()),
+        key=lambda x: (-len(x[1]), x[0]),
     )
-    worst_name = _persona_name(worst[0])
+    struggling = [(pid, fails) for pid, fails in struggling if fails]
+    worst_name = _persona_name(struggling[0][0]) if struggling else None
 
     body = f"""
     <p class=tagline>For parents <span class=dot>&middot;</span> An honest report</p>
@@ -632,14 +696,19 @@ def dashboard_parents() -> HTMLResponse:
         <strong>{c["n_personas"]} kinds of simulated students</strong> first &mdash;
         a kid who begs for answers, a kid who pretends to understand, a kid who
         panics, a kid who tries to trick the tutor, and so on &mdash; and we sent
-        each one through the tutor {m.n_sessions // c["n_personas"]} times.</p>
+        each one through the tutor {sessions_per} times.</p>
       <p class=lead>The new tutor is meaningfully better than the old one. It
         <strong>{answer_giving} hands out answers</strong>, it checks whether your
         child actually understands instead of taking their word for it, and it
         catches common math misunderstandings and corrects them.</p>
-      <p class=lead>It is not perfect. There is one kind of student
-        (<strong>{worst_name}</strong>) it doesn't yet help enough. We are
-        reporting that here instead of hiding it.</p>
+      <p class=lead>{
+        "Every kind of student we tested is reached to the passing bar."
+        if not struggling else
+        f'It is not perfect. {len(struggling)} kind{"s" if len(struggling) != 1 else ""} '
+        f'of student (starting with <strong>{worst_name}</strong>) '
+        f"{'are' if len(struggling) != 1 else 'is'} not yet helped enough. "
+        "We are reporting this here instead of hiding it."
+      }</p>
     </div>
 
     <div class=section>
@@ -656,14 +725,15 @@ def dashboard_parents() -> HTMLResponse:
 
     <div class=section>
       <h2>Where it still struggles &mdash; honestly</h2>
-      <ul class=bullet>
-        <li class=x>For a child who is already great at the topic, the tutor
-          sometimes over-checks and slows them down.</li>
-        <li class=x>For a child who needs a <em>lot</em> of patient support, the
-          tutor's "explain your thinking" approach can leave them stuck.</li>
-        <li class=x>Some basic measures (like solving brand-new problems they
-          haven't practiced) haven't yet reached the bar we want.</li>
-      </ul>
+      {
+        '<div class=empty>The tutor reached the bar for every kind of student we tested.</div>'
+        if not struggling else
+        '<ul class=bullet>' + ''.join(
+          f'<li class=x>For <strong>{_esc(_persona_name(pid))}</strong>, the tutor still '
+          f'falls short on: {" &middot; ".join(_esc(SHORT_LABELS.get(n, n)) for n in fails)}.</li>'
+          for pid, fails in struggling[:3]
+        ) + '</ul>'
+      }
     </div>
 
     <p class=foot>If you want the numbers: <a href="./">engineering view</a>

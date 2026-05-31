@@ -1,0 +1,61 @@
+---
+description: Anti-overengineering — YAGNI, no speculative abstractions, no premature optimization
+alwaysApply: true
+---
+
+# Simplicity First
+
+> **DRAFT — starter content generated to satisfy CLAUDE.md's always-apply
+> contract. Review and customize. Extends CLAUDE.md Rule 2.**
+
+## YAGNI
+
+- Don't add a parameter "in case someone needs it later". They won't, and
+  the test surface widens.
+- Don't add an `Optional` field "in case we want to make this configurable".
+  Make it configurable when the second caller appears.
+- Speculative dependencies (an unused `[llm]` extra, a "future" import) get
+  removed.
+
+## Abstraction
+
+- One concrete user before abstracting. Two before generalizing. Three before
+  designing a framework.
+- A base class with one subclass is usually a mistake; inline the subclass.
+- A helper used by one caller is usually a mistake; inline it. (Exception:
+  named for clarity, e.g. `_failing_dims` reads better than the inlined
+  comprehension.)
+
+## Data shape
+
+- Prefer plain dicts and dataclasses over class hierarchies.
+- Don't write a config system if a constant + an env var override does the job.
+- JSON is the default interchange format. XML is a code smell unless required.
+
+## Optimization
+
+- Profile before optimizing. "This looks slow" without measurement is not a
+  bug.
+- `lru_cache` is fine when the input is hashable and reuse is real; don't
+  decorate prematurely.
+- `O(N×R)` is fine when N and R are small. It's a finding when N or R can grow
+  beyond a thousand.
+
+## State
+
+- Module-level mutable state requires justification. The FastAPI `app` is OK
+  (framework convention). A module-level dict that grows during requests is
+  not.
+- Tests must restore any state they mutate (env vars, the working directory,
+  caches).
+
+## Smell tests
+
+If a change adds...
+- ...a flag-shaped optional (`x: Foo | None = None`) → check whether a
+  discriminated union models the two cases better.
+- ...a try/except that catches `Exception` and continues → check whether the
+  failure should propagate.
+- ...a special-case branch that doesn't fit the existing structure → check
+  whether the underlying abstraction is wrong (CLAUDE.md altitude rule).
+- ...100+ lines to a single file → check whether you should split.
