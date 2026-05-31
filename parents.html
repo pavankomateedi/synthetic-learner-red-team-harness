@@ -1,0 +1,180 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>For Parents — Is the AI Tutor Helping?</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"><style>
+:root{
+  /* SalesFlow-style dark canvas: deep navy, soft glow */
+  --bg:#0b0e1f;
+  --card:#141729;
+  --card-alt:#191c33;
+  --line:#272a44;
+  --ink:#f0f4ff;
+  --mut:#9ca3af;
+  --mut2:#6b7280;
+  /* Cyan is the single bright accent; violet/pink only as decoration */
+  --cyan:#67e8f9;
+  --cyan-dim:#22d3ee;
+  --violet:#a78bfa;
+  --pink:#f472b6;
+  /* Semantic — restrained */
+  --good:var(--cyan-dim);
+  --bad:#fb7185;        /* soft coral, not neon pink */
+  --warn:#fbbf24;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);min-height:100vh;
+  font:14.5px/1.6 "Inter","Helvetica Neue",Arial,sans-serif;
+  background-image:radial-gradient(circle at 90% 110%,rgba(244,114,182,0.10) 0%,transparent 50%),
+    radial-gradient(circle at 0% 0%,rgba(167,139,250,0.06) 0%,transparent 45%);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.wrap{max-width:1080px;margin:0 auto;padding:42px 22px 90px}
+
+h1{font-size:32px;margin:0 0 6px;letter-spacing:-0.02em;font-weight:700;line-height:1.15;
+  background:linear-gradient(90deg,var(--cyan) 0%,var(--violet) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:18px;margin:38px 0 4px;letter-spacing:-0.01em;font-weight:600;color:var(--ink)}
+h3{font-size:11.5px;margin:18px 0 8px;color:var(--cyan);font-weight:600;
+  text-transform:uppercase;letter-spacing:.12em}
+.sub{color:var(--mut);margin:0 0 6px;font-size:14px}
+.cap{color:var(--mut);margin:0 0 14px;font-size:13.5px;max-width:780px}
+.brandbar{height:2px;width:48px;border-radius:2px;margin:14px 0 24px;
+  background:linear-gradient(90deg,var(--cyan),var(--violet),var(--pink));opacity:.7}
+
+.summary{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:22px 24px;margin:16px 0 18px}
+.summary:last-of-type{margin-bottom:32px}
+.summary p{margin:0 0 10px;font-size:14.5px;line-height:1.65;color:var(--ink)}
+.summary p:last-of-type{margin-bottom:0}
+.summary strong{color:var(--cyan);font-weight:600}
+
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat{background:transparent;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.stat .n{font-size:24px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;
+  line-height:1.1;letter-spacing:-0.01em}
+.stat .lbl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;
+  margin-top:4px;font-weight:500}
+@media(max-width:680px){.statgrid{grid-template-columns:repeat(2,1fr)}}
+
+.pill{padding:3px 12px;border-radius:6px;font-size:12px;font-weight:500;letter-spacing:.02em;
+  font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  border:1px solid transparent;background:transparent;display:inline-block;
+  white-space:nowrap}
+.pill.good{border-color:rgba(34,211,238,.45);color:var(--cyan)}
+.pill.bad{border-color:rgba(251,113,133,.45);color:var(--bad)}
+.pill.warn{border-color:rgba(251,191,36,.45);color:var(--warn)}
+
+table{width:100%;border-collapse:collapse;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;overflow:hidden}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}
+th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+  background:var(--card-alt)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;text-align:right;
+  font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13.5px}
+.direction{color:var(--mut2);font-size:11px;display:block;margin-top:2px}
+
+.delta-up{color:var(--cyan);font-weight:500}
+.delta-down{color:var(--bad);font-weight:500}
+.delta-flat{color:var(--mut2)}
+.cell-fail{color:var(--bad);font-weight:500}
+.cell-ok{color:var(--mut)}
+
+.section{margin-top:30px}
+ul.fail{list-style:none;padding:0;margin:0;background:var(--card);
+  border:1px solid var(--line);border-radius:12px}
+ul.fail li{padding:12px 18px;border-bottom:1px solid var(--line);font-size:14px}
+ul.fail li:last-child{border-bottom:0}
+ul.fail li.bad{color:var(--bad);border-left:2px solid var(--bad)}
+.empty{padding:14px 18px;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;color:var(--mut);font-size:14px;border-left:2px solid var(--cyan)}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+@media(max-width:680px){.grid{grid-template-columns:1fr}}
+.foot{margin-top:46px;color:var(--mut2);font-size:13px;
+  border-top:1px solid var(--line);padding-top:16px}
+a{color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(103,232,249,0.3)}
+a:hover{border-bottom-color:var(--cyan)}
+
+.tagline{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.14em;
+  font-family:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.tagline .dot{color:var(--cyan)}
+
+.nav{display:flex;gap:6px;margin:6px 0 24px;flex-wrap:wrap}
+.nav a{padding:7px 14px;border:1px solid var(--line);border-radius:8px;
+  font-size:12.5px;font-weight:500;color:var(--mut);background:transparent;
+  border-bottom-color:var(--line)}
+.nav a.active{color:var(--cyan);border-color:rgba(34,211,238,.5);
+  background:rgba(34,211,238,.06)}
+.nav a:hover{color:var(--ink);border-bottom-color:var(--line)}
+.bigstat{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 22px}
+.bigstat .b{font-size:38px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums;
+  line-height:1;letter-spacing:-0.02em}
+.bigstat .l{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;
+  margin-top:6px;font-weight:500}
+.bigstat>div{padding-right:24px;border-right:1px solid var(--line)}
+.bigstat>div:last-child{border-right:0}
+.lead{font-size:16px;line-height:1.7;color:var(--ink);margin:0 0 14px}
+.lead:last-child{margin-bottom:0}
+ul.bullet{list-style:none;padding:0;margin:8px 0 0}
+ul.bullet li{padding:9px 0 9px 24px;position:relative;font-size:14.5px;line-height:1.55;
+  border-bottom:1px solid var(--line)}
+ul.bullet li:last-child{border-bottom:0}
+ul.bullet li::before{content:"✓";position:absolute;left:0;top:9px;color:var(--cyan);
+  font-weight:600}
+ul.bullet li.x::before{content:"!";color:var(--bad)}
+</style></head><body><div class=wrap>
+    <p class=tagline>For parents <span class=dot>&middot;</span> An honest report</p>
+    <h1>Is the AI tutor actually helping kids learn?</h1>
+    <p class=sub>A plain-language summary of how we tested a new AI tutor before
+      letting it near your child.</p>
+    <div class=brandbar></div>
+    <nav class=nav><a href="./" class="">For Nerdy</a><a href="teacher.html" class="">For Teachers</a><a href="parents.html" class="active">For Parents</a></nav>
+
+    <div class=bigstat>
+      <div><div class=b>1/10</div>
+        <div class=l>Student types fully helped</div></div>
+      <div><div class=b>never</div>
+        <div class=l>Does the tutor hand over answers?</div></div>
+      <div><div class=b>9</div>
+        <div class=l>Student types it still can't reach</div></div>
+    </div>
+
+    <div class=summary>
+      <p class=lead>We didn't ask real kids to test a new AI tutor. We built
+        <strong>10 kinds of simulated students</strong> first &mdash;
+        a kid who begs for answers, a kid who pretends to understand, a kid who
+        panics, a kid who tries to trick the tutor, and so on &mdash; and we sent
+        each one through the tutor 25 times.</p>
+      <p class=lead>The new tutor is meaningfully better than the old one. It
+        <strong>never hands out answers</strong>, it checks whether your
+        child actually understands instead of taking their word for it, and it
+        catches common math misunderstandings and corrects them.</p>
+      <p class=lead>It is not perfect. There is one kind of student
+        (<strong>The Struggling Learner</strong>) it doesn't yet help enough. We are
+        reporting that here instead of hiding it.</p>
+    </div>
+
+    <div class=section>
+      <h2>What the tutor does well</h2>
+      <ul class=bullet>
+        <li>Will not just give a child the answer, even if they ask repeatedly.</li>
+        <li>Asks the child to explain their thinking before moving on.</li>
+        <li>Recognizes and corrects common math mistakes (e.g., the classic
+          "I'll just add across the top and the bottom").</li>
+        <li>Brings a distracted child back to the problem without being harsh.</li>
+        <li>Refuses if a child tries to trick it into giving up the answers.</li>
+      </ul>
+    </div>
+
+    <div class=section>
+      <h2>Where it still struggles &mdash; honestly</h2>
+      <ul class=bullet>
+        <li class=x>For a child who is already great at the topic, the tutor
+          sometimes over-checks and slows them down.</li>
+        <li class=x>For a child who needs a <em>lot</em> of patient support, the
+          tutor's "explain your thinking" approach can leave them stuck.</li>
+        <li class=x>Some basic measures (like solving brand-new problems they
+          haven't practiced) haven't yet reached the bar we want.</li>
+      </ul>
+    </div>
+
+    <p class=foot>If you want the numbers: <a href="./">engineering view</a>
+      &middot; <a href="teacher.html">teacher view</a></p>
+    </div></body></html>

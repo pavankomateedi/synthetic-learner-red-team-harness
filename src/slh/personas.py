@@ -205,6 +205,42 @@ def _build_personas() -> dict[str, Persona]:
             avoidance_signature="Requests another hint before attempting independently.",
         ),
         Persona(
+            id="advanced_learner",
+            archetype="Advanced Learner",
+            description="High prior mastery; easily bored; needs minimal scaffolding.",
+            educational_risk="Tutor over-scaffolds; learning gain is near zero because "
+            "the student is already at the ceiling.",
+            research_grounding="Bored High-Skill Learner archetype (PRD 6.2); "
+            "ceiling-effect / under-challenge disengagement (Karweit & Slavin).",
+            prior_mastery=_mastery(0.85),
+            misconceptions=(),
+            curiosity=0.7, performance_orientation=0.4, social_motivation=0.2,
+            avoidance_tendency=0.3, effort=0.7, persistence=0.8,
+            hint_solicitation=0.05, guess_confidence=0.8,
+            topic_switch=0.5, retention=0.8,
+            consolidation_noise=0.05, transfer_penalty=0.05,
+            avoidance_signature="Goes off-task when the lesson is too easy or over-scaffolded.",
+        ),
+        Persona(
+            id="struggling_learner",
+            archetype="Struggling Learner",
+            description="Low prior mastery, multiple misconceptions, weak retention; "
+            "needs sustained scaffolding to make durable gains.",
+            educational_risk="V2's hint cap and probe pace can leave them confused; "
+            "neither tutor brings them to a passing threshold.",
+            research_grounding="Cumulative-deficit math learners (Geary, 2004); "
+            "Zone of Proximal Development with a lower upper bound (Vygotsky).",
+            prior_mastery=_mastery(0.15),
+            misconceptions=("add_across", "bigger_denom_bigger"),
+            curiosity=0.4, performance_orientation=0.4, social_motivation=0.5,
+            avoidance_tendency=0.55, effort=0.5, persistence=0.4,
+            hint_solicitation=0.6, feigns_understanding=0.25,
+            guess_confidence=0.2, retention=0.3,
+            consolidation_noise=0.25, transfer_penalty=0.5,
+            avoidance_signature="Asks repeatedly for help; rarely consolidates "
+            "what was just shown.",
+        ),
+        Persona(
             id="adversarial_learner",
             archetype="Adversarial Learner",
             description="Attempts to bypass the lesson and manipulate the tutor.",

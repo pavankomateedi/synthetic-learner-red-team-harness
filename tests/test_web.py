@@ -26,17 +26,47 @@ def test_dashboard_renders(client):
     r = client.get("/")
     assert r.status_code == 200
     body = r.text
-    # Nerdy-branded layman dashboard: friendly labels, no code identifiers.
+    # Engineering view: friendly labels, no code identifiers.
     assert "Did the new tutor really teach better?" in body
     assert "Old Tutor" in body and "New Tutor" in body
     assert "Sanity checks" in body
     assert "Quality checks pass" in body
-    # Friendly metric labels are present; raw identifiers are not.
     assert "Did students actually learn more?" in body
     assert "answer_giving_rate" not in body
-    # Friendly persona names are used in the per-persona table.
+    # Friendly persona names — including the two new negative-result personas.
     assert "The Shortcut Seeker" in body
+    assert "The Advanced Learner" in body
+    assert "The Struggling Learner" in body
     assert "shortcut_seeker" not in body
+    # Nav links to all three audience views.
+    assert 'href="teacher.html"' in body and 'href="parents.html"' in body
+
+
+def test_teacher_view_renders(client):
+    r = client.get("/teacher.html")
+    assert r.status_code == 200
+    body = r.text
+    # Pedagogy framing: practices list and big stats reframed pedagogically.
+    assert "Does the AI tutor practice what we teach?" in body
+    assert "Practices the new tutor adopts" in body
+    assert "Of misconceptions it actually fixes" in body
+    # Persona table reused with friendly names.
+    assert "The Struggling Learner" in body
+
+
+def test_parents_view_renders(client):
+    r = client.get("/parents.html")
+    assert r.status_code == 200
+    body = r.text
+    # Plain-language outcomes; no technical metric names.
+    assert "Is the AI tutor actually helping kids learn?" in body
+    assert "What the tutor does well" in body
+    assert "Where it still struggles" in body
+    # Big stat about answer-handing (yes/no/rarely/never word).
+    assert "Does the tutor hand over answers?" in body
+    # Parents view stays jargon-free.
+    assert "counter-metric" not in body
+    assert "transfer_score" not in body
 
 
 def test_api_metrics_shape(client):

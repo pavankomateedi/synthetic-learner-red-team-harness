@@ -23,19 +23,31 @@ def main() -> int:
     from slh import web
 
     web._loop.cache_clear()
-    html = web.dashboard().body.decode("utf-8")
+    pages = {
+        "index.html":   web.dashboard().body.decode("utf-8"),
+        "teacher.html": web.dashboard_teacher().body.decode("utf-8"),
+        "parents.html": web.dashboard_parents().body.decode("utf-8"),
+    }
     metrics = web.api_metrics().body.decode("utf-8")
 
     # Re-point dynamic endpoints at the static artifact (no server on Pages).
-    html = html.replace('<a href="/api/metrics">/api/metrics</a>',
-                        '<a href="metrics.json">metrics.json</a>')
-    html = html.replace(' &middot;\n      health at <a href="/healthz">/healthz</a>', "")
+    for name, html in pages.items():
+        old = '<a href="/api/metrics">/api/metrics</a>'
+        new = '<a href="metrics.json">metrics.json</a>'
+        if old in html:
+            html = html.replace(old, new)
+        old2 = ' &middot;\n      health at <a href="/healthz">/healthz</a>'
+        if old2 in html:
+            html = html.replace(old2, "")
+        pages[name] = html
 
     out.mkdir(parents=True, exist_ok=True)
-    (out / "index.html").write_text(html, encoding="utf-8")
+    for name, html in pages.items():
+        (out / name).write_text(html, encoding="utf-8")
     (out / "metrics.json").write_text(metrics, encoding="utf-8")
     (out / ".nojekyll").write_text("", encoding="utf-8")
-    print(f"wrote {out/'index.html'} ({len(html)} bytes), metrics.json, .nojekyll")
+    sizes = ", ".join(f"{n}={len(h)}b" for n, h in pages.items())
+    print(f"wrote 3 pages -> {out} ({sizes}), metrics.json, .nojekyll")
     return 0
 
 
